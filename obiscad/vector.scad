@@ -40,6 +40,96 @@ module vectorz(l=10, l_arrow=4)
   sphere(r=1/2, $fn=20);
 }
 
+module orientatez(v=[1,1,1],roll=0, inv=false)
+{
+  //-- Get the vector coordintles and rotating angle
+  x=v[0]; y=v[1]; z=v[2];
+  phi_z1 = roll;
+  
+  //-- Perform the needed calculations
+  phi_x = atan2(y,z);  //-- for case 1 (x=0)
+  phi_y2 = atan2(x,z); //-- For case 2 (y=0)
+  phi_z3 = atan2(y,x); //-- For case 3 (z=0)
+
+  //-- General case
+  l=sqrt(x*x+y*y);
+  phi_y4 = atan2(l,z);
+  phi_z4 = atan2(y,x);
+
+  //-- Orientate the Child acording to region where 
+  //-- the orientation vector is located
+
+  //-- Case 1:  The vector is on the plane x=0
+  if (x==0) { 
+     //echo("Case 1");      //-- For debugging 
+
+     //-- Inverse operation: from v to z
+     if (inv==true)
+      rotate([0,0,-phi_z1])
+	rotate([phi_x,0,0])
+	  child(0);
+     //-- Normal operation: From z to v
+     else 
+      rotate([-phi_x,0,0])
+	rotate([0,0,phi_z1])
+	  child(0);
+  }
+
+  //-- Case 2: Plane y=0
+  else if (y==0) {
+    //echo("Case 2");      //-- Debugging
+
+    //-- Inverse operation: from v to z
+    if (inv==true)
+      rotate([0,0,-phi_z1])
+	rotate([0,-phi_y2,0])
+          child(0);
+    //-- Normal operation: From z to v
+    else
+      rotate([0,phi_y2,0])
+        rotate([0,0,phi_z1])
+          child(0);
+  }
+
+  //-- Case 3: Plane z=0
+  else if (z==0) {
+    //echo("Case 3");      //-- Debugging
+
+    //-- Inverse operation: from v to z
+    if (inv==true)
+      rotate([0,0,-phi_z1])
+	rotate([0,-90,0])
+	  rotate([0,0,-phi_z3])
+	    child(0);
+    //-- Normal operation: From z to v
+    else 
+      rotate([0,0,phi_z3])
+	rotate([0,90,0])
+	  rotate([0,0,phi_z1])
+	    child(0);
+  }
+
+  //-- General case
+  else {
+    //echo("General case ");    //-- Debugging
+    //echo("Phi_z4: ", phi_z4);
+    //echo("Phi_y4: ",phi_y4);
+
+    if (inv==true)
+      rotate([0,0,-phi_z1])
+	rotate([0,-phi_y4,0])
+	  rotate([0,0,-phi_z4])
+	    child(0);
+    else
+      rotate([0,0,phi_z4])
+	rotate([0,phi_y4,0])
+	  rotate([0,0,phi_z1])
+	    child(0);
+  }
+}
+
+
+
 //---------------------------------------------------------------
 //-- ORIENTATE OPERATOR
 //-- Orientate the child to the direction given by the vector
@@ -72,10 +162,10 @@ module orientate(v=[1,1,1],roll=0)
   //-- Case 1:  The vector is on the plane x=0
   if (x==0) { 
      //echo("Case 1");      //-- For debugging 
-     
-     rotate([-phi_x,0,0])
-       rotate([0,0,phi_z1])
-         child(0);
+
+      rotate([-phi_x,0,0])
+	rotate([0,0,phi_z1])
+	  child(0);
   }
 
   //-- Case 2: Plane y=0
@@ -162,79 +252,83 @@ module frame(l=10, l_arrow=4)
     sphere(r=1, $fn=20);
 }
 
-//------------------------------------
-//-- Tests and examples
-//-----------------------------------
-
-
+//--------------------------------------------------
+//-- Modules for testings and examples
 //-- Testing that the vector library is working ok
+//--------------------------------------------------
+
 //-- 22 vectors in total are drawn, poiting to different directions
-a = 20;
-k = 1;
+module Test_vectors1()
+{
 
-//--  Add a frame of reference (in the origin)
-frame(l=a);
+  a = 20;
+  k = 1;
 
-//-- Negative vectors, pointing towards the three axis: -x, -y, -z
-color("Red")   vector([-a, 0,  0]);
-color("Green") vector([0, -a,  0]);
-color("Blue")  vector([0,  0, -a]);
+  //--  Add a frame of reference (in the origin)
+  frame(l=a);
 
-//-- It is *not* has been implemented using a for loop on purpose
-//-- This way, individual vectors can be commented out or highlighted
+  //-- Negative vectors, pointing towards the three axis: -x, -y, -z
+  color("Red")   vector([-a, 0,  0]);
+  color("Green") vector([0, -a,  0]);
+  color("Blue")  vector([0,  0, -a]);
 
-//-- vectors with positive z
-vector([a,   a, a*k]);
-vector([0,   a, a*k]);
-vector([-a,  a, a*k]);
-vector([-a,  0, a*k]);
+  //-- It is *not* has been implemented using a for loop on purpose
+  //-- This way, individual vectors can be commented out or highlighted
 
-vector([-a, -a, a*k]);
-vector([0,  -a, a*k]);
-vector([a,  -a, a*k]);
-vector([a,   0, a*k]);
+  //-- vectors with positive z
+  vector([a,   a, a*k]);
+  vector([0,   a, a*k]);
+  vector([-a,  a, a*k]);
+  vector([-a,  0, a*k]);
+
+  vector([-a, -a, a*k]);
+  vector([0,  -a, a*k]);
+  vector([a,  -a, a*k]);
+  vector([a,   0, a*k]);
 
 
-//-- Vectors with negative z
-vector([a,   a, -a*k]);
-vector([0,   a, -a*k]);
-vector([-a,  a, -a*k]);
-vector([-a,  0, -a*k]);
+  //-- Vectors with negative z
+  vector([a,   a, -a*k]);
+  vector([0,   a, -a*k]);
+  vector([-a,  a, -a*k]);
+  vector([-a,  0, -a*k]);
 
-vector([-a, -a, -a*k]);
-vector([0,  -a, -a*k]);
-vector([a,  -a, -a*k]);
-vector([a,   0, -a*k]);
-
+  vector([-a, -a, -a*k]);
+  vector([0,  -a, -a*k]);
+  vector([a,  -a, -a*k]);
+  vector([a,   0, -a*k]);
+}
 
 //--- Another test...
-//-- Add the vector into the vector table
-//-- This vectors are taken as directions
-//-- All the vectors will be drawn with the same length (l)
-vector_table = [
-  [1,   1, 1],
-  [0,   1, 1],
-  [-1,  1, 1],
-  [-1,  0, 1],
-  [-1, -1, 1],
-  [0,  -1, 1],
-  [1,  -1, 1],
-  [1,   0, 1],
- 
-  [1,   1, -1],
-  [0,   1, -1],
-  [-1,  1, -1],
-  [-1,  0, -1],
-  [-1, -1, -1],
-  [0,  -1, -1],
-  [1,  -1, -1],
-  [1,   0, -1],
-];
+module Test_vectors2()
+{
 
-//-- Vector length
-l=20;
+  //-- Add the vector into the vector table
+  //-- This vectors are taken as directions
+  //-- All the vectors will be drawn with the same length (l)
+  vector_table = [
+    [1,   1, 1],
+    [0,   1, 1],
+    [-1,  1, 1],
+    [-1,  0, 1],
+    [-1, -1, 1],
+    [0,  -1, 1],
+    [1,  -1, 1],
+    [1,   0, 1],
+  
+    [1,   1, -1],
+    [0,   1, -1],
+    [-1,  1, -1],
+    [-1,  0, -1],
+    [-1, -1, -1],
+    [0,  -1, -1],
+    [1,  -1, -1],
+    [1,   0, -1],
+  ];
 
-translate([60,0,0]) {
+  //-- Vector length
+  l=20;
+
   frame(l=10);
 
   //-- Draw all the vector given in the table
@@ -246,5 +340,23 @@ translate([60,0,0]) {
   }
 }
 
+
+//------------------------------------
+//-------- Perform tests......
+
+v = [10,-10,-10];
+
+color("Red") vector(v);
+
+orientatez(v,inv=true)
+  vector(v);
+
+
+/*
+Test_vectors1();
+
+translate([60,0,0]) 
+  Test_vectors2();
+*/
 
 
