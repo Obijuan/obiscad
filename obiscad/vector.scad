@@ -7,12 +7,14 @@
 //-- Released under the GPL license
 //---------------------------------------------------------------
 
-//---------------------------------------------------------------
+//------------------------------------------------------------------
 //-- Draw a vector poiting to the z axis
+//-- This is an auxiliary module for implementing the vector module
+//--
 //-- Parameters:
 //--  l: total vector length (line + arrow)
 //--  l_arrow: Vector arrow length
-//---------------------------------------------------------
+//------------------------------------------------------------------
 module vectorz(l=10, l_arrow=4)
 {
   //-- vector body length (not including the arrow)
@@ -102,16 +104,33 @@ module orientate(v=[1,1,1],roll=0)
   }
 }
 
-//--------------------------------------------------------
-//-- Draw a vector poiting to the z axis
+//---------------------------------------------------------------------------
+//-- Draw a vector 
+//--
+//-- There are two modes of drawing the vector
+//-- * Mode 1: Given by a cartesian point(x,y,z). A vector from the origin
+//--           to the end (x,y,z) is drawn. The l parameter (length) must 
+//--           be 0  (l=0)
+//-- * Mode 2: Give by direction and length
+//--           A vector of length l pointing to the direction given by
+//--           v is drawn
+//---------------------------------------------------------------------------
 //-- Parameters:
+//--  v: Vector cartesian coordinates
 //--  l: total vector length (line + arrow)
 //--  l_arrow: Vector arrow length
-//---------------------------------------------------------
-module vector(v,l_arrow=4)
+//---------------------------------------------------------------------------
+module vector(v,l=0, l_arrow=4)
 {
+  //-- Get the vector length from the coordinates
   mod = sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]);
-  orientate(v) vectorz(l=mod, l_arrow=l_arrow);
+
+  //-- Draw the vector. The vector length is given either
+  //--- by the mod variable (when l=0) or by l (when l!=0)
+  if (l==0)
+    orientate(v) vectorz(l=mod, l_arrow=l_arrow);
+  else
+    orientate(v) vectorz(l=l, l_arrow=l_arrow);
 }
 
 //----------------------------------------------------
@@ -183,6 +202,36 @@ vector([0,  -a, -a*k]);
 vector([a,  -a, -a*k]);
 vector([a,   0, -a*k]);
 
+
+//--- Another test...
+//-- Add the vector into the vector table
+//-- This vectors are taken as directions
+//-- All the vectors will be drawn with the same length (l)
+vector_table = [
+  [1,   1, 1],
+  [0,   1, 1],
+  [-1,  1, 1],
+  [-1,  0, 1],
+  [-1, -1, 1],
+  [0,  -1, 1],
+  [1,  -1, 1],
+  [1,   0, 1],
+];
+
+//-- Vector length
+l=20;
+
+translate([60,0,0]) {
+  frame(l=10);
+
+  //-- Draw all the vector given in the table
+  //-- The vectors point to the direction given in the table
+  //-- They all are drawn with a length equal to l
+  for (v=vector_table) {
+    //-- Vector given by direction and length
+    vector(v,l=l);
+  }
+}
 
 
 
