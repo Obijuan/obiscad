@@ -1,6 +1,14 @@
-//---------------------------------------------
+//---------------------------------------------------------------------
 //-- Example of use of the vector library
-//---------------------------------------------
+//-- It is just an example of what can be done with the vector library
+//-- A simple robot kinematics is show. For making the example easier
+//-- no homogeneous transformation are used. There are no direct
+//-- kinematic calculations. It will be done in future examples
+//--
+//-- A robot consisting of 4-DOF is drawn (with 2 spherical 2-DOF joints)
+//-- The link projections on the z=0 are drawn as gray vectors to 
+//-- see the robot better
+//---------------------------------------------------------------------
 use <obiscad/vector.scad>
 
 //-- Robot parameters
