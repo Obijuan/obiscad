@@ -1,4 +1,13 @@
-//--------------------------------------------------------
+//---------------------------------------------------------------
+//-- Openscad vector library
+//-- This is a component of the obiscad opescad tools by Obijuan
+//-- (C) Juan Gonzalez-Gomez (Obijuan)
+//-- Sep-2012
+//---------------------------------------------------------------
+//-- Released under the GPL license
+//---------------------------------------------------------------
+
+//---------------------------------------------------------------
 //-- Draw a vector poiting to the z axis
 //-- Parameters:
 //--  l: total vector length (line + arrow)
@@ -6,6 +15,7 @@
 //---------------------------------------------------------
 module vectorz(l=10, l_arrow=4)
 {
+  //-- vector body length (not including the arrow)
   lb = l - l_arrow;
 
   //-- The vector is locatead at 0,0,0
@@ -25,50 +35,55 @@ module vectorz(l=10, l_arrow=4)
 }
 
 //---------------------------------------------------------------
-//-- Orientate the child to the direction given
-//-- by a vector. 
-//-- The z axis of the child is rotate so that it
-//-- points in the direction given by v
+//-- ORIENTATE OPERATOR
+//-- Orientate the child to the direction given by the vector
+//-- The z axis of the child is rotate so that it points in the
+//-- direction given by v
+//-- 
 //-- Parameters:
 //--   v : Orientation vector
-//--  roll: Angle to rotate the along the v axis
+//--  roll: Angle to rotate the child around the v axis
 //---------------------------------------------------------------
 module orientate(v=[1,1,1],roll=0)
 {
+  //-- Get the vector coordinales and rotating angle
   x=v[0]; y=v[1]; z=v[2];
   phi_z1 = roll;
-
-  //-- Case 1
-  phi_x = atan2(y,z);
   
-  //-- Case 2
-  phi_y2 = atan2(x,z);
-
-  //-- Case 3
-  phi_z3 = atan2(y,x);
+  //-- Perform the needed calculations
+  phi_x = atan2(y,z);  //-- for case 1 (x=0)
+  phi_y2 = atan2(x,z); //-- For case 2 (y=0)
+  phi_z3 = atan2(y,x); //-- For case 3 (z=0)
 
   //-- General case
   l=sqrt(x*x+y*y);
   phi_y4 = atan2(l,z);
-  phi_z4 = atan(y/x);
+  phi_z4 = atan2(y,x);
 
-  //-- Case 1:  plane x=0
+  //-- Orientate the Child acording to region where 
+  //-- the orientation vector is located
+
+  //-- Case 1:  The vector is on the plane x=0
   if (x==0) { 
-     echo("Case 1"); 
+     //echo("Case 1");      //-- For debugging 
+     
      rotate([-phi_x,0,0])
        rotate([0,0,phi_z1])
          child(0);
   }
+
   //-- Case 2: Plane y=0
   else if (y==0) {
-    echo("Case 2");
+    //echo("Case 2");      //-- Debugging
+
     rotate([0,phi_y2,0])
        rotate([0,0,phi_z1])
          child(0);
   }
   //-- Case 3: Plane z=0
   else if (z==0) {
-    echo("Case 3");
+    //echo("Case 3");      //-- Debugging
+
     rotate([0,0,phi_z3])
     rotate([0,90,0])
        rotate([0,0,phi_z1])
@@ -76,9 +91,10 @@ module orientate(v=[1,1,1],roll=0)
   }
   //-- General case
   else {
-    echo("General case ");
-    echo("Phi_z4: ", phi_z4);
-    echo("Phi_y4: ",phi_y4);
+    //echo("General case ");    //-- Debugging
+    //echo("Phi_z4: ", phi_z4);
+    //echo("Phi_y4: ",phi_y4);
+
     rotate([0,0,phi_z4])
       rotate([0,phi_y4,0])
         rotate([0,0,phi_z1])
@@ -123,30 +139,49 @@ module frame(l=10, l_arrow=4)
     sphere(r=1, $fn=20);
 }
 
+//------------------------------------
+//-- Tests and examples
+//-----------------------------------
 
-//-- Examples
 
-//--  Add a frame of reference
-frame(l=10);
-
-//-- Orientate a cube
-*orientate(v=[1,1,1],roll=0) 
-  translate([0,0,10]) 
-    cube([1,1,20],center=true);
-
+//-- Testing that the vector library is working ok
+//-- 22 vectors in total are drawn, poiting to different directions
 a = 20;
+k = 1;
 
-//-- Show a vector
-vector([a,a,a]);
+//--  Add a frame of reference (in the origin)
+frame(l=a);
 
-color("Gray") vector([a,a,0]);
-color("Gray")
-  translate([a,a,0])
-  vector([0,0,a]);
+//-- Negative vectors, pointing towards the three axis: -x, -y, -z
+color("Red")   vector([-a, 0,  0]);
+color("Green") vector([0, -a,  0]);
+color("Blue")  vector([0,  0, -a]);
 
-//-- Add a transparent cube
-color("Gray",0.2)
-  cube(a);
+//-- It is *not* has been implemented using a for loop on purpose
+//-- This way, individual vectors can be commented out or highlighted
+
+//-- vectors with positive z
+vector([a,   a, a*k]);
+vector([0,   a, a*k]);
+vector([-a,  a, a*k]);
+vector([-a,  0, a*k]);
+
+vector([-a, -a, a*k]);
+vector([0,  -a, a*k]);
+vector([a,  -a, a*k]);
+vector([a,   0, a*k]);
+
+
+//-- Vectors with negative z
+vector([a,   a, -a*k]);
+vector([0,   a, -a*k]);
+vector([-a,  a, -a*k]);
+vector([-a,  0, -a*k]);
+
+vector([-a, -a, -a*k]);
+vector([0,  -a, -a*k]);
+vector([a,  -a, -a*k]);
+vector([a,   0, -a*k]);
 
 
 
