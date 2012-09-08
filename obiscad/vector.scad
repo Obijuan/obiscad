@@ -7,6 +7,10 @@
 //-- Released under the GPL license
 //---------------------------------------------------------------
 
+//-- Calculate the module of a vector
+function mod(v) = (sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]));
+
+
 //------------------------------------------------------------------
 //-- Draw a vector poiting to the z axis
 //-- This is an auxiliary module for implementing the vector module
@@ -123,7 +127,7 @@ module orientate(v=[1,1,1],roll=0)
 module vector(v,l=0, l_arrow=4)
 {
   //-- Get the vector length from the coordinates
-  mod = sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]);
+  mod = mod(v);
 
   //-- Draw the vector. The vector length is given either
   //--- by the mod variable (when l=0) or by l (when l!=0)
@@ -216,6 +220,15 @@ vector_table = [
   [0,  -1, 1],
   [1,  -1, 1],
   [1,   0, 1],
+ 
+  [1,   1, -1],
+  [0,   1, -1],
+  [-1,  1, -1],
+  [-1,  0, -1],
+  [-1, -1, -1],
+  [0,  -1, -1],
+  [1,  -1, -1],
+  [1,   0, -1],
 ];
 
 //-- Vector length
