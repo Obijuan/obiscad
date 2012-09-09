@@ -54,94 +54,6 @@ module vectorz(l=10, l_arrow=4)
   sphere(r=1/2, $fn=20);
 }
 
-module orientatez(v=[1,1,1],roll=0, inv=false)
-{
-  //-- Get the vector coordintles and rotating angle
-  x=v[0]; y=v[1]; z=v[2];
-  phi_z1 = roll;
-  
-  //-- Perform the needed calculations
-  phi_x = atan2(y,z);  //-- for case 1 (x=0)
-  phi_y2 = atan2(x,z); //-- For case 2 (y=0)
-  phi_z3 = atan2(y,x); //-- For case 3 (z=0)
-
-  //-- General case
-  l=sqrt(x*x+y*y);
-  phi_y4 = atan2(l,z);
-  phi_z4 = atan2(y,x);
-
-  //-- Orientate the Child acording to region where 
-  //-- the orientation vector is located
-
-  //-- Case 1:  The vector is on the plane x=0
-  if (x==0) { 
-     //echo("Case 1");      //-- For debugging 
-
-     //-- Inverse operation: from v to z
-     if (inv==true)
-      rotate([0,0,-phi_z1])
-	rotate([phi_x,0,0])
-	  child(0);
-     //-- Normal operation: From z to v
-     else 
-      rotate([-phi_x,0,0])
-	rotate([0,0,phi_z1])
-	  child(0);
-  }
-
-  //-- Case 2: Plane y=0
-  else if (y==0) {
-    //echo("Case 2");      //-- Debugging
-
-    //-- Inverse operation: from v to z
-    if (inv==true)
-      rotate([0,0,-phi_z1])
-	rotate([0,-phi_y2,0])
-          child(0);
-    //-- Normal operation: From z to v
-    else
-      rotate([0,phi_y2,0])
-        rotate([0,0,phi_z1])
-          child(0);
-  }
-
-  //-- Case 3: Plane z=0
-  else if (z==0) {
-    //echo("Case 3");      //-- Debugging
-
-    //-- Inverse operation: from v to z
-    if (inv==true)
-      rotate([0,0,-phi_z1])
-	rotate([0,-90,0])
-	  rotate([0,0,-phi_z3])
-	    child(0);
-    //-- Normal operation: From z to v
-    else 
-      rotate([0,0,phi_z3])
-	rotate([0,90,0])
-	  rotate([0,0,phi_z1])
-	    child(0);
-  }
-
-  //-- General case
-  else {
-    //echo("General case ");    //-- Debugging
-    //echo("Phi_z4: ", phi_z4);
-    //echo("Phi_y4: ",phi_y4);
-
-    if (inv==true)
-      rotate([0,0,-phi_z1])
-	rotate([0,-phi_y4,0])
-	  rotate([0,0,-phi_z4])
-	    child(0);
-    else
-      rotate([0,0,phi_z4])
-	rotate([0,phi_y4,0])
-	  rotate([0,0,phi_z1])
-	    child(0);
-  }
-}
-
 //-----------------------------------------------------------------
 //-- ORIENTATE OPERATOR
 //--
@@ -153,7 +65,7 @@ module orientatez(v=[1,1,1],roll=0, inv=false)
 //--          of v
 //--    roll: Rotation of the object around the v axis
 //-------------------------------------------------------------------
-module orientate2(v,vref=[0,0,1], roll=0)
+module orientate(v,vref=[0,0,1], roll=0)
 {
   //-- Calculate the rotation axis
   raxis = cross(vref,v);
@@ -169,7 +81,10 @@ module orientate2(v,vref=[0,0,1], roll=0)
 
 
 //---------------------------------------------------------------
-//-- ORIENTATE OPERATOR
+//-- ORIENTATE OPERATOR (DEPRECATED!!!)
+//-- It is an old-implementation. The new one is much faster
+//-- compact, and elegant!
+//--
 //-- Orientate the child to the direction given by the vector
 //-- The z axis of the child is rotate so that it points in the
 //-- direction given by v
@@ -178,7 +93,7 @@ module orientate2(v,vref=[0,0,1], roll=0)
 //--   v : Orientation vector
 //--  roll: Angle to rotate the child around the v axis
 //---------------------------------------------------------------
-module orientate(v=[1,1,1],roll=0)
+module orientate_old(v=[1,1,1],roll=0)
 {
   //-- Get the vector coordinales and rotating angle
   x=v[0]; y=v[1]; z=v[2];
@@ -257,12 +172,35 @@ module vector(v,l=0, l_arrow=4)
   //-- Get the vector length from the coordinates
   mod = mod(v);
 
+  //-- The vector is very easy implemented by means of the orientate
+  //-- operator:
+  //--  orientate(v) vectorz(l=mod, l_arrow=l_arrow)
+  //--  BUT... in OPENSCAD 2012.02.22 the recursion does not
+  //--    not work, so that if the user use the orientate operator
+  //--    on a vector, openscad will ignore it..
+  //-- The solution at the moment (I hope the openscad developers
+  //--  implement the recursion in the near future...)
+  //--  is to repite the orientate operation in this module
+
+  //---- SAME CALCULATIONS THAN THE ORIENTATE OPERATOR!
+  //-- Calculate the rotation axis
+
+  vref = [0,0,1];
+  raxis = cross(vref,v);
+  
+  //-- Calculate the angle between the vectors
+  ang = anglev(vref,v);
+
+  //-- orientate the vector
   //-- Draw the vector. The vector length is given either
   //--- by the mod variable (when l=0) or by l (when l!=0)
   if (l==0)
-    orientate(v) vectorz(l=mod, l_arrow=l_arrow);
+    rotate(a=ang, v=raxis)
+      vectorz(l=mod, l_arrow=l_arrow);
   else
-    orientate(v) vectorz(l=l, l_arrow=l_arrow);
+    rotate(a=ang, v=raxis)
+      vectorz(l=l, l_arrow=l_arrow);
+
 }
 
 //----------------------------------------------------
@@ -378,19 +316,10 @@ module Test_vectors2()
   }
 }
 
-module Test_vector3()
-{
-  v = [10,-10,-10];
-
-  color("Red") vector(v);
-
-  orientatez(v,inv=true)
-    vector(v);
-}
 
 //-- Test the cross product and the angle
 //-- between vectors
-module Test_vectors4()
+module Test_vector3()
 {
   //-- Start with 2 unit vectors
   v=unitv([1,1,1]);
@@ -418,7 +347,7 @@ module Test_vectors4()
 
 }
 
-module Test_vectors5()
+module Test_vector4()
 {
   o = [10,10,10];
   v = [-10,10,10];
@@ -427,16 +356,16 @@ module Test_vectors5()
   color("Blue") vector(v);
 
   //-- Orientate the vector o in the direction of v
-  orientate2(v,o)
+  orientate(v,o)
     vector(o);
 
   //-- Inverse operation: orientate the v vector in the direction
   //-- of o
-  orientate2(o,v)
+  orientate(o,v)
     vector(v);
 
   //-- Example of orientation of a cube
-  orientate2(o,vref=[10,-2,5],roll=0)
+  orientate(o,vref=[10,-2,5],roll=0)
     cube([10,2,5],center=true);
 
   vector([10,-2,5]);
@@ -445,12 +374,13 @@ module Test_vectors5()
 
 //-------- Perform tests......
 
-Test_vectors5();
-
+Test_vector4();
 
 
 /*
+
 Test_vectors1();
+
 
 translate([60,0,0]) 
   Test_vectors2();
