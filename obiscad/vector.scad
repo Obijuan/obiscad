@@ -10,6 +10,12 @@
 //-- Calculate the module of a vector
 function mod(v) = (sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]));
 
+function cross(u,v) = [
+  u[0]*v[2] - v[1]*u[2],
+  -(u[0]*v[2] - v[0]*u[2]) ,
+  u[0]*v[1] - v[0]*u[1]];
+
+function unit(v) = v/mod(v);
 
 //------------------------------------------------------------------
 //-- Draw a vector poiting to the z axis
@@ -128,6 +134,11 @@ module orientatez(v=[1,1,1],roll=0, inv=false)
   }
 }
 
+
+module orientate2(v,roll=0)
+{
+  
+}
 
 
 //---------------------------------------------------------------
@@ -340,16 +351,32 @@ module Test_vectors2()
   }
 }
 
+module Test_vector3()
+{
+  v = [10,-10,-10];
+
+  color("Red") vector(v);
+
+  orientatez(v,inv=true)
+    vector(v);
+}
+
+module Test_cross_product()
+{
+  v=[1,1,1];
+  u=[-1,1,1];
+
+  color("Red") vector(v*10);
+  color("blue") vector(u*10);
+
+  w = cross(v,u);
+  vector(w*10);
+}
 
 //------------------------------------
 //-------- Perform tests......
 
-v = [10,-10,-10];
-
-color("Red") vector(v);
-
-orientatez(v,inv=true)
-  vector(v);
+Test_cross_product();
 
 
 /*
