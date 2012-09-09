@@ -45,6 +45,8 @@ module point(p)
 //-- Parameters:
 //--  l: total vector length (line + arrow)
 //--  l_arrow: Vector arrow length
+//--  mark: If true, a mark is draw in the vector head, for having
+//--    a visual reference of the rolling angle
 //------------------------------------------------------------------
 module vectorz(l=10, l_arrow=4, mark=false)
 {
@@ -114,6 +116,8 @@ module orientate(v,vref=[0,0,1], roll=0)
 //--  v: Vector cartesian coordinates
 //--  l: total vector length (line + arrow)
 //--  l_arrow: Vector arrow length
+//    mark: If true, a mark is draw in the vector head, for having
+//--    a visual reference of the rolling angle
 //---------------------------------------------------------------------------
 module vector(v,l=0, l_arrow=4, mark=false)
 {
