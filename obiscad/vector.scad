@@ -29,6 +29,15 @@ function unitv(v) = v/mod(v);
 //-- Return the angle between two vectores
 function anglev(u,v) = acos( dot(u,v) / (mod(u)*mod(v)) );
 
+//----------------------------------------------------------
+//--  Draw a point in the position given by the vector p  
+//----------------------------------------------------------
+module point(p)
+{
+  translate(p)
+    sphere(r=0.7,$fn=20);
+}
+
 //------------------------------------------------------------------
 //-- Draw a vector poiting to the z axis
 //-- This is an auxiliary module for implementing the vector module
