@@ -46,7 +46,7 @@ module point(p)
 //--  l: total vector length (line + arrow)
 //--  l_arrow: Vector arrow length
 //------------------------------------------------------------------
-module vectorz(l=10, l_arrow=4)
+module vectorz(l=10, l_arrow=4, mark=false)
 {
   //-- vector body length (not including the arrow)
   lb = l - l_arrow;
@@ -58,6 +58,13 @@ module vectorz(l=10, l_arrow=4)
     //-- Draw the arrow
     translate([0,0,lb/2])
       cylinder(r1=2/2, r2=0.2, h=l_arrow, $fn=20);
+
+    //-- Draw the mark
+    if (mark) {
+      translate([0,0,lb/2+l_arrow/2])
+      translate([1,0,0])
+        cube([2,0.3,l_arrow*0.8],center=true);
+    }
 
     //-- Draw the body
     cylinder(r=1/2, h=lb, center=true, $fn=20);
@@ -108,7 +115,7 @@ module orientate(v,vref=[0,0,1], roll=0)
 //--  l: total vector length (line + arrow)
 //--  l_arrow: Vector arrow length
 //---------------------------------------------------------------------------
-module vector(v,l=0, l_arrow=4)
+module vector(v,l=0, l_arrow=4, mark=false)
 {
   //-- Get the vector length from the coordinates
   mod = mod(v);
@@ -137,10 +144,10 @@ module vector(v,l=0, l_arrow=4)
   //--- by the mod variable (when l=0) or by l (when l!=0)
   if (l==0)
     rotate(a=ang, v=raxis)
-      vectorz(l=mod, l_arrow=l_arrow);
+      vectorz(l=mod, l_arrow=l_arrow, mark=mark);
   else
     rotate(a=ang, v=raxis)
-      vectorz(l=l, l_arrow=l_arrow);
+      vectorz(l=l, l_arrow=l_arrow, mark=mark);
 
 }
 
