@@ -10,12 +10,20 @@
 //-- Calculate the module of a vector
 function mod(v) = (sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]));
 
+//-- Calculate the cros product of two vectors
 function cross(u,v) = [
   u[0]*v[2] - v[1]*u[2],
   -(u[0]*v[2] - v[0]*u[2]) ,
   u[0]*v[1] - v[0]*u[1]];
 
-function unit(v) = v/mod(v);
+//-- Calculate the dot product of two vectors
+function dot(u,v) = u[0]*v[0]+u[1]*v[1]+u[2]*v[2];
+
+//-- Return the unit vector of a vector
+function unitv(v) = v/mod(v);
+
+//-- Return the angle between two vectores
+function anglev(u,v) = acos( dot(u,v) / (mod(u)*mod(v)) );
 
 //------------------------------------------------------------------
 //-- Draw a vector poiting to the z axis
@@ -361,22 +369,28 @@ module Test_vector3()
     vector(v);
 }
 
-module Test_cross_product()
+module Test_vectors4()
 {
   v=[1,1,1];
-  u=[-1,1,1];
+  u=[0,1,0];
 
   color("Red") vector(v*10);
   color("blue") vector(u*10);
 
   w = cross(v,u);
   vector(w*10);
+
+  a = anglev(v,w);
+  echo("a :",a);
+
 }
 
 //------------------------------------
 //-------- Perform tests......
 
-Test_cross_product();
+Test_vectors4();
+
+
 
 
 /*
