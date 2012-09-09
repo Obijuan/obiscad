@@ -406,48 +406,30 @@ module Test_vectors4()
 
 }
 
+module Test_vectors5()
+{
+  o = [10,10,10];
+  v = [-10,10,10];
+
+  color("Red") vector(o);
+  color("Blue") vector(v);
+
+  //-- Orientate the vector o in the direction of v
+  orientate2(v,o)
+    vector(o);
+
+  //-- Inverse operation: orientate the v vector in the direction
+  //-- of o
+  orientate2(o,v)
+    vector(v);
+
+}
 
 //-------- Perform tests......
 
-Test_vectors4();
+Test_vectors5();
 
-/*
-o = [10,10,10];
-v = [-10,10,0];
 
-color("Red") vector(o);
-color("Blue") vector(v);
-
-//vector(v);
-
-w1 = unitv(cross(v,o));
-vector(w1*20);
-
-w2 = unitv(cross(o,v));
-vector(w2*20);
-
-echo("W1,V: ", anglev(w1,v));
-echo("W2,V: ", anglev(w2,v));
-*/
-
-/*
-orientate2(v,o)
-  vector(o);
-
-*/
-
-/*
-
-raxis = cross(o,v);
-vector(raxis*20);
-
-ang = anglev(o,v);
-echo("Ang: ",ang);
-
-rotate(a=ang, v=raxis)
-  vector(o*20);
-
-*/
 
 /*
 Test_vectors1();
