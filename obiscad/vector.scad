@@ -12,7 +12,7 @@ function mod(v) = (sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]));
 
 //-- Calculate the cros product of two vectors
 function cross(u,v) = [
-  u[0]*v[2] - v[1]*u[2],
+  u[1]*v[2] - v[1]*u[2],
   -(u[0]*v[2] - v[0]*u[2]) ,
   u[0]*v[1] - v[0]*u[1]];
 
@@ -143,9 +143,16 @@ module orientatez(v=[1,1,1],roll=0, inv=false)
 }
 
 
-module orientate2(v,roll=0)
+module orientate2(v,vref=[0,0,1], roll=0)
 {
+  //-- Calculate the rotation axis
+  raxis = cross(vref,v);
   
+  //-- Calculate the angle between the vectors
+  ang = anglev(vref,v);
+
+  //-- Rotate the child!
+  rotate(a=ang, v=raxis) child(0);
 }
 
 
@@ -369,29 +376,78 @@ module Test_vector3()
     vector(v);
 }
 
+//-- Test the cross product and the angle
+//-- between vectors
 module Test_vectors4()
 {
-  v=[1,1,1];
-  u=[0,1,0];
+  //-- Start with 2 unit vectors
+  v=unitv([1,1,1]);
+  u=unitv([0,1,0]);
 
-  color("Red") vector(v*10);
-  color("blue") vector(u*10);
+  //-- Draw the vector in different colors
+  //-- Increase the length for drawing
+  color("Red") vector(v*20);
+  color("blue") vector(u*20);
 
+  //-- Get the cross product
   w = cross(v,u);
-  vector(w*10);
+  vector(w*20);
 
-  a = anglev(v,w);
-  echo("a :",a);
+  //-- The cross product is NOT conmutative... 
+  //-- change the order of v and u
+  w2 = cross(u,v);
+  vector(w2*20);
+
+  //-- w should be perpendicular to v and u
+  //-- Calculate the angles between them:
+  echo("U , V: ", anglev(u,v));
+  echo("W , U: ", anglev(w,u));
+  echo("W , V: ", anglev(w,v));
 
 }
 
-//------------------------------------
+
 //-------- Perform tests......
 
 Test_vectors4();
 
+/*
+o = [10,10,10];
+v = [-10,10,0];
 
+color("Red") vector(o);
+color("Blue") vector(v);
 
+//vector(v);
+
+w1 = unitv(cross(v,o));
+vector(w1*20);
+
+w2 = unitv(cross(o,v));
+vector(w2*20);
+
+echo("W1,V: ", anglev(w1,v));
+echo("W2,V: ", anglev(w2,v));
+*/
+
+/*
+orientate2(v,o)
+  vector(o);
+
+*/
+
+/*
+
+raxis = cross(o,v);
+vector(raxis*20);
+
+ang = anglev(o,v);
+echo("Ang: ",ang);
+
+rotate(a=ang, v=raxis)
+  vector(o*20);
+
+*/
 
 /*
 Test_vectors1();
