@@ -142,7 +142,17 @@ module orientatez(v=[1,1,1],roll=0, inv=false)
   }
 }
 
-
+//-----------------------------------------------------------------
+//-- ORIENTATE OPERATOR
+//--
+//--  Orientate an object to the direction given by the vector v
+//--  Parameters:
+//--    v : Target orientation
+//--    vref: Vector reference. It is the vector of the local frame
+//--          of the object that want to be poiting in the direction
+//--          of v
+//--    roll: Rotation of the object around the v axis
+//-------------------------------------------------------------------
 module orientate2(v,vref=[0,0,1], roll=0)
 {
   //-- Calculate the rotation axis
@@ -152,7 +162,9 @@ module orientate2(v,vref=[0,0,1], roll=0)
   ang = anglev(vref,v);
 
   //-- Rotate the child!
-  rotate(a=ang, v=raxis) child(0);
+  rotate(a=roll, v=v)
+    rotate(a=ang, v=raxis)
+      child(0);
 }
 
 
@@ -422,6 +434,12 @@ module Test_vectors5()
   //-- of o
   orientate2(o,v)
     vector(v);
+
+  //-- Example of orientation of a cube
+  orientate2(o,vref=[10,-2,5],roll=0)
+    cube([10,2,5],center=true);
+
+  vector([10,-2,5]);
 
 }
 
