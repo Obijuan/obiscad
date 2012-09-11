@@ -82,6 +82,68 @@ module bccorner(cr=1,cres=4,th=1,l=10,ecorner=false)
   //frame(l=10); //-- Debug
 }
 
+
+module bevel()
+{
+  
+  //-------- Main object
+  size=[30,30,30];
+  *cube(size,center=true);  
+
+  //-- edge connector
+  eanchor2 = [size[0]/2, 0,size[2]/2];
+  ec1 = [[-size[0]/2, 0,  size[2]/2],[0,1,0],0];
+  ec2 = [eanchor2,                   [0,1,0],0];
+
+  //-- edge orientation
+  eo = [ eanchor2, [1,0,1], 0 ];
+
+
+  //-- Corner connector
+  cc =  [[0,0,0],[0,0,1],0];
+  co = -[[0,0,0],[1,1,0],0];
+
+  //-- Draw the edge connector
+  connector(ec2);
+  connector(eo);
+
+  //-- Calculate the angle between the eo and co
+  //-- First the transformation of co (tco) should be
+  //-- calculated!
+  //tco = 
+  v = unitv(cc[1])*10;
+  vector(v);
+
+  //-- Calculate here the transformation!!!
+  raxis = cross(v,ec2[1]);
+  ang = anglev(v,ec2[1]);
+  
+
+  p = co[1];  //-- Vector to transform
+  k=unitv(raxis);
+  teta = ang;
+
+  tv = p*cos(teta) + cross(k,p*sin(teta)) + k*dot(k,p)*(1-cos(teta));
+  color("Red") vector(unitv(tv)*10);
+  
+  //-- Roll angle!
+  final_angle =anglev(tv,eo[1]);
+ 
+  ec2m = [ec2[0], ec2[1], final_angle];
+
+
+  attach(ec2m, cc) 
+  //color("Blue") 
+    union() {
+      connector(co);
+      color("Blue",0.2)
+      bccorner(cr=15, cres=10, l=10, th=1, ecorner=false);
+    }
+
+
+
+}
+
 //-------------------------------------------------------------------
 //--   TESTS
 //-------------------------------------------------------------------
@@ -89,18 +151,11 @@ module bccorner(cr=1,cres=4,th=1,l=10,ecorner=false)
 //-- example 1
 //bccorner(cr=15, cres=10, l=10, th=3, ecorner=true);
 
-//-- corner connector
-cc = [[0,0,0],[0,0,1],0];
 
-size = [30,30,30];
-
-//-- edge connector
-ec1 = [[-size[0]/2, 0,size[2]/2],[0,1,0],0];
-ec2 = [[size[0]/2, 0,size[2]/2],[0,1,0],0];
+bevel();
 
 
-
-connector(ec2);
+/*
 
 difference() {
 
@@ -114,7 +169,7 @@ attach(ec2, cc)
 
 *render(convexity=4);
 
-
+*/
 
 
 
