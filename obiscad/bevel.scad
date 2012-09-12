@@ -35,6 +35,7 @@ function det(a,b,c) =
 
 function anglevs(u,v) =  sign(det(u,v,cross(u,v)))*anglev(u,v);
 
+function sign2(x) = sign(x)+1 - abs(sign(x));
 
 //--------------------------------------------------------------------
 //-- Beveled concave corner
@@ -106,6 +107,24 @@ module bccorner(cr=1,cres=4,th=1,l=10,ecorner=false)
   //frame(l=10); //-- Debug
 }
 
+module bevel_attach_aux(cfrom,cto,cr,cres,l)
+{
+ 
+  //-- This block represent an attach operation
+  //-- It is equivalent to:  attach(cto,cfrom)
+  translate(cto[0])
+  rotate(a=cto[2], v=cto[1])
+  rotate(a=anglev(cfrom[1],cto[1]), v=cross(cfrom[1],cto[1]))
+  translate(-cfrom[0]) 
+
+  union() {
+    //color("Blue")
+    //connector(cfrom);
+    //connector([cfrom[0],cnormal_v,0]);
+    bccorner(cr=cr, cres=cres, l=l, th=1, ecorner=false);
+  }
+}
+
 //-- Edge connector: on the edge. Paralell to the edge
 //-- Edge normal: Vector normal to the edge (45 deg)
 module bevel(edge_c, normal_c, l, cr=4, cres=10,)
@@ -129,37 +148,39 @@ module bevel(edge_c, normal_c, l, cr=4, cres=10,)
   //-- the product of Matrix and matrix by vector operator!!!!
 
   //-- Calculate here the transformation without matrices!!!
-  //-- Transformation ce --> edge
+  //-- Transformation cedge_v --> edge_v
   //-- Apply to cn
+
+  //-- Calculate the sign of the rotation (the sign of roll)
+  s=sign2(det(cnormal_v,enormal_v,edge_v));
+
+  //-- Calculate the roll when the edges are paralell
+  rollp = s*anglev(cnormal_v, enormal_v);
+
+  //-- Calculate the roll in the general case
   Tcnormal_v = Tovector(cedge_v, edge_v, cnormal_v);
+  rollg=s*anglev(Tcnormal_v, enormal_v);
 
-  //-- Calculate the sign of the rotation
-  s=sign(det(cnormal_v,enormal_v,edge_v));
-
-  //-- Roll angle with sign!
-  roll=s*anglev(Tcnormal_v, enormal_v);
-
-  echo("Roll: ",roll);
-
-  //-- Create the connectors for the attach operation!
-  cto = [edge_c[0], edge_c[1], roll];
-  cfrom = [[0,0,0],cedge_v,0];
-
-  //-- This block represent an attach operation
-  //-- It is equivalent to:  attach(cto,cfrom)
-  translate(cto[0])
-  rotate(a=cto[2], v=cto[1])
-  rotate(a=anglev(cfrom[1],cto[1]), v=cross(cfrom[1],cto[1]))
-  translate(-cfrom[0]) 
-
-  union() {
-    //color("Blue")
-    //connector(cfrom);
-    //connector([cfrom[0],cnormal_v,0]);
-    bccorner(cr=cr, cres=cres, l=l, th=1, ecorner=false);
+  //-- For the paralell case...
+  if (mod(cross(cedge_v,edge_v))==0) {
+    echo("Paralell");
+     //-- Place the concave bevel corner!
+     bevel_attach_aux(
+       cfrom=[[0,0,0],cedge_v,0],
+       cto=[edge_c[0], edge_c[1], rollp],
+       cr=cr,cres=cres,l=l);
+      
   }
-
-
+  //-- For the general case
+  else {
+    echo("not paralell");
+    //-- Place the concave bevel corner!
+     bevel_attach_aux(
+       cfrom=[[0,0,0],cedge_v,0],
+       cto=[edge_c[0], edge_c[1], rollg],
+       cr=cr,cres=cres,l=l);
+  }
+  
 }
 
 //-------------------------------------------------------------------
@@ -186,48 +207,56 @@ en3 = [ec3[0],                   [-1,0,-1], 0];
 ec4 = [[size[0]/2, 0,-size[2]/2], [0,1,0], 0];
 en4 = [ec4[0],                   [1,0,-1], 0];
 
-*connector(ec4);
-*connector(en4);
+ec5 = [[0, size[0]/2,size[2]/2], [1,0,0], 0];
+en5 = [ec5[0],                   [0,1,1], 0];
+
+ec6 = [[0, -size[0]/2,size[2]/2], [1,0,0], 0];
+en6 = [ec6[0],                   [0,-1,1], 0];
+
+ec7 = [[0, -size[0]/2,-size[2]/2], [1,0,0], 0];
+en7 = [ec7[0],                   [0,-1,-1], 0];
+
+ec8 = [[0, size[0]/2,-size[2]/2], [1,0,0], 0];
+en8 = [ec8[0],                    [0,1,-1], 0];
+
+ec9 = [[size[2]/2, size[0]/2,0 ], [0,0,1], 0];
+en9 = [ec9[0],                    [1,1,0], 0];
+
+ec10 = [[size[2]/2, -size[0]/2,0 ], [0,0,1], 0];
+en10 = [ec10[0],                    [1,-1,0], 0];
+
+ec11 = [[-size[2]/2, -size[0]/2,0 ], [0,0,1], 0];
+en11 = [ec11[0],                    [-1,-1,0], 0];
+
+ec12 = [[-size[2]/2, size[0]/2,0 ], [0,0,1], 0];
+en12 = [ec12[0],                    [-1,1,0], 0];
+
+*connector(ec12);
+*connector(en12);
+
+cr=8;
+cres=0;
 
 difference() {
   cube(size,center=true); 
-  #bevel(ec1,en1,l=size[0]+2);
-  #bevel(ec2,en2,l=size[0]+2);
-  #bevel(ec3,en3,l=size[0]+2);
-  #bevel(ec4,en4,l=size[0]+2);
+
+  bevel(ec1,en1,cr=cr,cres=0, l=size[1]+2);
+  bevel(ec2,en2,cr=cr,cres=0, l=size[1]+2);
+  bevel(ec3,en3,cr=cr,cres=0, l=size[1]+2);
+  bevel(ec4,en4,cr=cr,cres=0, l=size[1]+2);
+
+  bevel(ec5,en5,cr=cr,cres=0, l=size[0]+2);
+  bevel(ec6,en6,cr=cr,cres=0, l=size[0]+2);
+  bevel(ec7,en7,cr=cr,cres=0, l=size[0]+2);
+  bevel(ec8,en8,cr=cr,cres=0, l=size[0]+2);
+
+  bevel(ec9,en9,cr=cr,cres=0, l=size[0]+2);
+  bevel(ec10,en10,cr=cr,cres=0, l=size[0]+2);
+  bevel(ec11,en11,cr=cr,cres=0, l=size[0]+2);
+  bevel(ec12,en12,cr=cr,cres=0, l=size[0]+2);
+
 }
 
-
-/*
-v1 = [1,1,0];
-v2 = [-1,1,0];
-v3 = cross(v1,v2);
-s = sign(det(v1,v2,v3));
-
-echo("Det: ",det(v1,v2,v3));
-
-color("Blue") vector(v1*10);
-vector(v2*10);
-
-echo("Angle: ",anglevs(v2,v1));
-
-*/
-
-/*
-
-difference() {
-
-cube(size,center=true);
-
-attach(ec2, cc) 
-  #color("Blue") 
-    bccorner(cr=15, cres=10, l=10, th=3, ecorner=false);
-}
-
-
-*render(convexity=4);
-
-*/
 
 
 
