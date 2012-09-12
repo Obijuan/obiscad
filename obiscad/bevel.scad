@@ -1,6 +1,6 @@
 //---------------------------------------------------------------
 //-- Openscad Bevel library
-//-- xxxxxxxx
+//-- Bevel the edges or add buttress to your parts!
 //---------------------------------------------------------------
 //-- This is a component of the obiscad opescad tools by Obijuan
 //-- (C) Juan Gonzalez-Gomez (Obijuan)
@@ -28,18 +28,20 @@ function Tovector(vfrom, vto, v) =
 //-- Auxiliary function for extending a vector of 3 components to 4
 function ev(v,c=0) = [v[0], v[1], v[2], c];
 
+//-- Calculate the determinant of a matrix given by 3 row vectors
 function det(a,b,c) = 
    a[0]*(b[1]*c[2]-b[2]*c[1])
  - a[1]*(b[0]*c[2]-b[2]*c[0])  
  + a[2]*(b[0]*c[1]-b[1]*c[0]);
 
-function anglevs(u,v) =  sign(det(u,v,cross(u,v)))*anglev(u,v);
 
+//-- Sign function. It only returns 2 values: -1 when x is negative,
+//-- or 1 when x=0 or x>0
 function sign2(x) = sign(x)+1 - abs(sign(x));
 
 //--------------------------------------------------------------------
 //-- Beveled concave corner
-//-- NOT AN INTERFACE MODULE (The user should call bcorner instead)
+//-- NOT AN INTERFACE MODULE (The user should call bconcave_corner instead)
 //--
 //-- Parameters:
 //--   * cr: Corner radius
@@ -47,7 +49,7 @@ function sign2(x) = sign(x)+1 - abs(sign(x));
 //--   * l: Length
 //-    * th: Thickness
 //--------------------------------------------------------------------
-module bccorner2(cr,cres,l,th)
+module bconcave_corner_aux(cr,cres,l,th)
 {
   
   //-- vector for translating the  main cube
@@ -73,7 +75,10 @@ module bccorner2(cr,cres,l,th)
   }
 }
 
-//--------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
+//-- API MODULE
+//--
 //-- Beveled concave corner
 //--
 //-- Parameters:
@@ -81,34 +86,21 @@ module bccorner2(cr,cres,l,th)
 //--   * cres: Corner resolution
 //--   * l: Length
 //-    * th: Thickness
-//--   * ecorner: Where the origin is locate. By default it is located
+//--   * ext_corner: Where the origin is locate. By default it is located
 //--       in the internal corner (concave zone). If true, 
 //--       it will be in the external corner (convex zone)
 //----------------------------------------------------------------------------
-module bccorner(cr=1,cres=4,th=1,l=10,ecorner=false)
+module bconcave_corner(cr=1,cres=4,th=1,l=10,ext_corner=false)
 {
-  /* -- Documentation
-  //-- Connector
-  c = [[0,0,0], [0,0,1], 0];
-  connector(c);
-
-  //-- Orientation vector
-  v = -[cr,cr,0];
-  vector(v);
-  */
-
-  if (ecorner)
+  //-- Locate the origin in the exterior edge
+  if (ext_corner==true)
     translate([th,th,0]) 
-      bccorner2(cr,cres,l,th);
+      bconcave_corner_aux(cr,cres,l,th);
   else
+     //-- Locate the origin in the interior edge
      translate([0.01, 0.01,0])
-       bccorner2(cr,cres,l,th);
-
-  //frame(l=10); //-- Debug
+       bconcave_corner_aux(cr,cres,l,th);
 }
-
-
-//--------------------------- REFACTORYING!!  ----------------------
 
 //----------------------------------------------------------------------
 //-- Auxiliary module (NOT FOR THE USER!)
@@ -138,11 +130,11 @@ module bconcave_corner_attach_final(
     //color("Blue")
     //connector(cfrom);
     //connector([cfrom[0],cnormal_v,0]);
-    bccorner(cr=cr,
+    bconcave_corner(cr=cr,
              cres=cres, 
              l=l,
              th=th,
-             ecorner=ext_corner);
+             ext_corner=ext_corner);
   }
 }
 
@@ -459,8 +451,8 @@ module Test2_buttress()
   ec5 = [[th/2, 0, -th/2], [0,1,0], 0];
   en5 = [ec5[0],[1,0,-1],0]; 
 
-  connector(ec5);
-  connector(en5);
+  *connector(ec5);
+  *connector(en5);
  
   //-- quadrant 1:  two buttress
   bconcave_corner_attach(ec1,en1,cr, l=l, cres=0);
@@ -481,13 +473,14 @@ module Test2_buttress()
 //--   TESTS
 //-------------------------------------------------------------------
 
-//-- example 1
-//bccorner(cr=15, cres=10, l=10, th=3, ecorner=true);
+//-- example 1: A beveled concave corner
+bconcave_corner(cr=15, cres=10, l=10, th=3, ext_corner=true);
 
-
+//-- Example 2: Testing the bevel() operator
 //Test1_beveled_cube();
 
-Test2_buttress();
+//-- Example 3: Testing the bconcave_corner_attach() operator
+//Test2_buttress();
 
 
 
