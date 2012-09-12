@@ -241,81 +241,46 @@ module bconcave_corner_attach_aux(
   }
 }
 
-
-module bevel_attach_aux(cfrom,cto,cr,cres,l)
+//---------------------------------------------------------------------------
+//-- API MODULE
+//--
+//--  Bevel an edge. A concave corner is located so that the calling 
+//--  module can easily perform a difference() operation
+//--
+//--  Two connectors are needed:
+//--    * edge_c   : Connector located on the edge, paralell to the edge
+//--    * normal_c : Connector located on the same point than edge_c 
+//--                 pointing to the internal corner part, in the direction
+//--                 of the corner bisector
+//--    * cr        : Corner radius
+//--    * cres      : Corner resolution
+//--    * l         : Corner length
+//--------------------------------------------------------------------------  
+module bevel(
+           edge_c, 
+           normal_c,
+           cr=3,
+           cres=3,
+           l=5)
 {
- 
-  //-- This block represent an attach operation
-  //-- It is equivalent to:  attach(cto,cfrom)
-  translate(cto[0])
-  rotate(a=cto[2], v=cto[1])
-  rotate(a=anglev(cfrom[1],cto[1]), v=cross(cfrom[1],cto[1]))
-  translate(-cfrom[0]) 
 
-  union() {
-    //color("Blue")
-    //connector(cfrom);
-    //connector([cfrom[0],cnormal_v,0]);
-    bccorner(cr=cr, cres=cres, l=l, th=1, ecorner=false);
-  }
-}
+  //-- Call the general module with the correct internal connectors
+  bconcave_corner_attach_aux(
 
-//-- Edge connector: on the edge. Paralell to the edge
-//-- Edge normal: Vector normal to the edge (45 deg)
-module bevel(edge_c, normal_c, l, cr=4, cres=10,)
-{
-  
-  //-- Get the vector paralell and normal to the edge
-  edge_v = edge_c[1];      //-- Edge verctor
-  enormal_v = normal_c[1]; //-- Edge normal vector
+         //-- External connectors
+         edge_c   = edge_c,
+         normal_c = normal_c,
 
-  //-- Corner vector
-  cedge_v = unitv([0,0,1]);  //-- Corner edge vector
-  cnormal_v = [-1,-1,0];     //-- Corner normal vector
+	 //-- Internal connectors 
+         iedge_c   = [[0,0,0], unitv([0,0,1]), 0],
+         inormal_c = [[0,0,0], [-1,-1,0]       , 0],
 
-  //-- The correct orientation of the corner (roll angle)
-  //-- when it is attached to the edge is given by the angle
-  //-- between the edge normal vector (enormal_v) and the transformated
-  //-- corner normal vector (Tcnormal_v)
-
-  //-- The tcn can be calculated easily by using transformation
-  //-- Matrix... BUT... version 2012.02.22 of OpenScad lacks
-  //-- the product of Matrix and matrix by vector operator!!!!
-
-  //-- Calculate here the transformation without matrices!!!
-  //-- Transformation cedge_v --> edge_v
-  //-- Apply to cn
-
-  //-- Calculate the sign of the rotation (the sign of roll)
-  s=sign2(det(cnormal_v,enormal_v,edge_v));
-
-  //-- Calculate the roll when the edges are paralell
-  rollp = s*anglev(cnormal_v, enormal_v);
-
-  //-- Calculate the roll in the general case
-  Tcnormal_v = Tovector(cedge_v, edge_v, cnormal_v);
-  rollg=s*anglev(Tcnormal_v, enormal_v);
-
-  //-- For the paralell case...
-  if (mod(cross(cedge_v,edge_v))==0) {
-    //echo("Paralell");
-     //-- Place the concave bevel corner!
-     bevel_attach_aux(
-       cfrom=[[0,0,0],cedge_v,0],
-       cto=[edge_c[0], edge_c[1], rollp],
-       cr=cr,cres=cres,l=l);
-      
-  }
-  //-- For the general case
-  else {
-    //echo("not paralell");
-    //-- Place the concave bevel corner!
-     bevel_attach_aux(
-       cfrom=[[0,0,0],cedge_v,0],
-       cto=[edge_c[0], edge_c[1], rollg],
-       cr=cr,cres=cres,l=l);
-  }
-  
+         //-- The other params
+         cr=cr,
+         cres=cres,
+         l=l,
+         th=1,
+         ext_corner=false);
 }
 
 
@@ -368,13 +333,18 @@ module bconcave_corner_attach(
 //---   TEST MODULES
 //-----------------------------------------------------------
 
+//-----------------------------------------------------------------
+//--  Testing the Bevel operator... All the 12 edges of a cube
+//--  are beveled. All the cases are covered, so it is a good
+//--  test for finding bugs!
+//----------------------------------------------------------------
 module Test1_beveled_cube()
 {
   //-------- Main object
   size=[30,30,30];
 
 
-  //-- edges connectors
+  //-- Define all the edges connectors
   ec1 = [[size[0]/2, 0,size[2]/2], [0,1,0], 0];
   en1 = [ec1[0],                   [1,0,1], 0];
 
@@ -411,15 +381,23 @@ module Test1_beveled_cube()
   ec12 = [[-size[2]/2, size[0]/2,0 ], [0,0,1], 0];
   en12 = [ec12[0],                    [-1,1,0], 0];
 
+
+  //-- for Debuging... Show a specefic connector
   *connector(ec12);
   *connector(en12);
 
-  cr=8;
+  //-- Parameters for all the beveled edges
+  //-- It can be changed for testing
+  cr=2;
   cres=0;
 
+  //-- Remove from the main cube the concave corner parts
   difference() {
+
+    //-- Draw the main cube
     cube(size,center=true); 
 
+    //-- Attach the concave corners for beveling!
     bevel(ec1,en1,cr=cr,cres=0, l=size[1]+2);
     bevel(ec2,en2,cr=cr,cres=0, l=size[1]+2);
     bevel(ec3,en3,cr=cr,cres=0, l=size[1]+2);
@@ -438,6 +416,67 @@ module Test1_beveled_cube()
   }
 }
 
+//----------------------------------------------------------------
+//-- Testing the bconcave_corner_attach operator
+//-- It is used for adding buttress between two ortogonal parts
+//----------------------------------------------------------------
+module Test2_buttress()
+{
+  size=[30,30,30];
+  th=3;
+  l=2;
+  cr = 6;
+ 
+
+  //-- A cross. It divides the space in 4 quadrants
+  difference() {  
+    cube(size,center=true);
+    translate([size[0]/4 + th/2, 0, size[0]/4 + th/2])
+      cube([size[0]/2, size[1]+2, size[2]/2],center=true);
+
+    translate([-size[0]/4 - th/2, 0, size[0]/4 + th/2])
+      cube([size[0]/2, size[1]+2, size[2]/2],center=true);
+
+    translate([-size[0]/4 - th/2, 0, -size[0]/4 - th/2])
+      cube([size[0]/2, size[1]+2, size[2]/2],center=true);
+
+    translate([size[0]/4 + th/2, 0, -size[0]/4 - th/2])
+      cube([size[0]/2, size[1]+2, size[2]/2],center=true);
+  }
+
+  ec1 = [[th/2, size[1]/2-l/2, th/2], [0,1,0], 0];
+  en1 = [ec1[0],[1,0,1],0];
+
+  ec2 = [[th/2, -size[1]/2+l/2, th/2], [0,1,0], 0];
+  en2 = [ec2[0],[1,0,1],0];
+
+  ec3 = [[-th/2, 0, th/2], [0,1,0], 0];
+  en3 = [ec3[0],[-1,0,1],0];
+
+  ec4 = [[-th/2, 0, -th/2], [0,1,0], 0];
+  en4 = [ec4[0],[-1,0,-1],0]; 
+
+  ec5 = [[th/2, 0, -th/2], [0,1,0], 0];
+  en5 = [ec5[0],[1,0,-1],0]; 
+
+  connector(ec5);
+  connector(en5);
+ 
+  //-- quadrant 1:  two buttress
+  bconcave_corner_attach(ec1,en1,cr, l=l, cres=0);
+  bconcave_corner_attach(ec2,en2,cr, l=l, cres=0);
+  
+  //-- quadrant 2:  one bit buttress
+  bconcave_corner_attach(ec3,en3,cr=3, l=size[1], cres=0);
+
+  //-- quadrant 3: a Rounded buttress
+  bconcave_corner_attach(ec4,en4,cr=8, l=size[1], cres=5);
+
+  //-- Quadrant 4: A rounded buttress in the middle
+  bconcave_corner_attach(ec5,en5,cr=8, l=size[1]/3, cres=5);
+
+}
+
 //-------------------------------------------------------------------
 //--   TESTS
 //-------------------------------------------------------------------
@@ -447,37 +486,8 @@ module Test1_beveled_cube()
 
 
 //Test1_beveled_cube();
-size=[30,30,30];
-th=3;
-l=2;
 
-ec1 = [[-size[0]/2+th, (size[1]-l)/2, -size[2]/2+th ], [0,1,0], 0];
-en1 = [ec1[0],[1,0,1],0];
-
-ec2 = [[-size[0]/2+th, -(size[1]-l)/2, -size[2]/2+th ], [0,1,0], 0];
-en2 = [ec2[0],[1,0,1],0];
-
-ec3 = [[-size[0]/2+th, 0, -size[2]/2+th ], [0,1,0], 0];
-en3 = [ec3[0],[1,0,1],0];
-
-*connector(ec);
-*connector(en);
-
-
-
-difference() {
-  cube(size,center=true);
-  translate([th,0,th])
-    cube([size[0], size[1]+1,size[2]],center=true);
-}
-
-bconcave_corner_attach(ec1,en1,cr=10, cres=0, th=th, l=l, ext_corner=true);
-bconcave_corner_attach(ec2,en2,cr=10, cres=0, l=l, ext_corner=false);
-/*
-bconcave_corner_attach(ec3,en3,cr=10, cres=0, l=size[1], ext_corner=false);
-bconcave_corner_attach(ec3,en3,cr=10, cres=4, l=size[1], ext_corner=false);
-*/
-
+Test2_buttress();
 
 
 
