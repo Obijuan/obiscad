@@ -129,22 +129,57 @@ module bconcave_corner_attach_final(cfrom,cto,cr,cres,l,ext_corner)
 }
 
 
+//-------------------------------------------------------------------------
+//-- Auxiliary module (NOT FOR THE USER!)
+//-- It is the general module for performing the bconcave corner attach
+//-- All the parameters should be passed to it
+//--
+//--  External connectors are where de concave corner will be placed. They
+//--  are provided by the user
+//--
+//--  Internal connectors refers to the connectors of the concave corner
+//--
+//--  Then an attach between the internal and external connectors is done
+//-------------------------------------------------------------------------
 module bconcave_corner_attach_aux(
 
-         //-- Parameters:
-         edge_c, normal_c,           //-- External connectors
-         iedge_c, inormal_c,         //-- Internal connectors
-         cr=3, cres=3, l=5,
-         ext_corner=false)
+         //-- External connectors
+         edge_c, 
+         normal_c,
+
+         //-- Internal connectors
+         iedge_c,
+         inormal_c,
+
+	 //-- Other params
+         cr,
+         cres,
+         l,
+         ext_corner)
 
 {
-  //-- Corner vector
+  //-- Get the Corner vectors from the internal connectors
   cedge_v = iedge_c[1];         //-- Corner edge vector
   cnormal_v = inormal_c[1];     //-- Corner normal vector
 
   //-- Get the vector paralell and normal to the edge
+  //-- From the external connectors
   edge_v = edge_c[1];      //-- Edge verctor
   enormal_v = normal_c[1]; //-- Edge normal vector
+
+  //---------------------------------------------------------------
+  //-- For doing a correct attach, first the roll angle for the  
+  //-- external connector should be calculated. It determines the
+  //-- orientation of the concave corner around the edge vector
+  //--
+  //-- This orientation is calculated using the edge normal vectors
+  //-- that bisec the corner
+  //--
+  //-- There are 2 different cases: depending on the relative angle
+  //-- between the internal and external edges. They can be parallel
+  //-- or not
+  //-----------------------------------------------------------------
+  //-- The roll angle has two components: the value and the sign
 
   //-- Calculate the sign of the rotation (the sign of roll)
   s=sign2(det(cnormal_v,enormal_v,edge_v));
@@ -156,27 +191,32 @@ module bconcave_corner_attach_aux(
   Tcnormal_v = Tovector(cedge_v, edge_v, cnormal_v);
   rollg=s*anglev(Tcnormal_v, enormal_v);
 
-  //-- For the paralell case...
+  //-- For the paralell case... use rollp
   if (mod(cross(cedge_v,edge_v))==0) {
     //echo("Paralell");
+
      //-- Place the concave bevel corner!
-     bevel_attach_aux(
-       cfrom=[[0,0,0],cedge_v,0],
-       cto=[edge_c[0], edge_c[1], rollp],
-       cr=cr,cres=cres,l=l);
-      
+     bconcave_corner_attach_final(
+       cfrom = [[0,0,0],   cedge_v,   0],
+       cto   = [edge_c[0], edge_c[1], rollp],
+       cr    = cr,
+       cres  = cres,
+       l     = l,
+       ext_corner = ext_corner);
   }
-  //-- For the general case
+
+  //-- For the general case, use rollg
   else {
     //echo("not paralell");
-    //-- Place the concave bevel corner!
+
+     //-- Place the concave bevel corner!
      bconcave_corner_attach_final(
-       cfrom =[[0,0,0],cedge_v,0],
-       cto   =[edge_c[0], edge_c[1], rollg],
-       cr   =cr,
-       cres=cres,
-       l=l,
-       ext_corner=ext_corner);
+       cfrom = [[0,0,0],   cedge_v,   0],
+       cto   = [edge_c[0], edge_c[1], rollg],
+       cr    = cr,
+       cres  = cres,
+       l     = l,
+       ext_corner = ext_corner);
   }
 }
 
@@ -385,11 +425,21 @@ module Test1_beveled_cube()
 //Test1_beveled_cube();
 size=[30,30,30];
 th=3;
+l=2;
 
-ec = [[-size[0]/2+th, 0, -size[2]/2+th ], [0,1,0], 0];
-en = [ec[0],[1,0,1],0];
+ec1 = [[-size[0]/2+th, (size[1]-l)/2, -size[2]/2+th ], [0,1,0], 0];
+en1 = [ec1[0],[1,0,1],0];
+
+ec2 = [[-size[0]/2+th, -(size[1]-l)/2, -size[2]/2+th ], [0,1,0], 0];
+en2 = [ec2[0],[1,0,1],0];
+
+ec3 = [[-size[0]/2+th, 0, -size[2]/2+th ], [0,1,0], 0];
+en3 = [ec3[0],[1,0,1],0];
+
 *connector(ec);
 *connector(en);
+
+
 
 difference() {
   cube(size,center=true);
@@ -397,7 +447,13 @@ difference() {
     cube([size[0], size[1]+1,size[2]],center=true);
 }
 
-bconcave_corner_attach(ec,en,cr=10, cres=0, l=5, ext_corner=false);
+bconcave_corner_attach(ec1,en1,cr=10, cres=0, l=l, ext_corner=false);
+bconcave_corner_attach(ec2,en2,cr=10, cres=0, l=l, ext_corner=false);
+/*
+bconcave_corner_attach(ec3,en3,cr=10, cres=0, l=size[1], ext_corner=false);
+bconcave_corner_attach(ec3,en3,cr=10, cres=4, l=size[1], ext_corner=false);
+*/
+
 
 
 
