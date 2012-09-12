@@ -110,21 +110,39 @@ module bccorner(cr=1,cres=4,th=1,l=10,ecorner=false)
 
 //--------------------------- REFACTORYING!!  ----------------------
 
-module bconcave_corner_attach_final(cfrom,cto,cr,cres,l,ext_corner)
+//----------------------------------------------------------------------
+//-- Auxiliary module (NOT FOR THE USER!)
+//-- It is and standar "attach", particularized for placing concave
+//-- corners
+//----------------------------------------------------------------------
+module bconcave_corner_attach_final(
+        cfrom,  //-- Origin connector
+        cto,    //-- Target connector
+        cr,
+        cres,
+        l,
+        th,
+        ext_corner)
 {
  
   //-- This block represent an attach operation
   //-- It is equivalent to:  attach(cto,cfrom)
   translate(cto[0])
-  rotate(a=cto[2], v=cto[1])
-  rotate(a=anglev(cfrom[1],cto[1]), v=cross(cfrom[1],cto[1]))
-  translate(-cfrom[0]) 
+    rotate(a=cto[2], v=cto[1])
+      rotate(a=anglev(cfrom[1],cto[1]), 
+             v=cross(cfrom[1],cto[1]) )
+        translate(-cfrom[0]) 
 
+  //-- Place the concave corner (along with some debug information)
   union() {
     //color("Blue")
     //connector(cfrom);
     //connector([cfrom[0],cnormal_v,0]);
-    bccorner(cr=cr, cres=cres, l=l, th=1, ecorner=ext_corner);
+    bccorner(cr=cr,
+             cres=cres, 
+             l=l,
+             th=th,
+             ecorner=ext_corner);
   }
 }
 
@@ -154,6 +172,7 @@ module bconcave_corner_attach_aux(
 	 //-- Other params
          cr,
          cres,
+         th,
          l,
          ext_corner)
 
@@ -202,6 +221,7 @@ module bconcave_corner_attach_aux(
        cr    = cr,
        cres  = cres,
        l     = l,
+       th    = th,
        ext_corner = ext_corner);
   }
 
@@ -216,6 +236,7 @@ module bconcave_corner_attach_aux(
        cr    = cr,
        cres  = cres,
        l     = l,
+       th    = th,
        ext_corner = ext_corner);
   }
 }
@@ -310,6 +331,7 @@ module bevel(edge_c, normal_c, l, cr=4, cres=10,)
 //--    * cr        : Corner radius
 //--    * cres      : Corner resolution
 //--    * l         : Corner length
+//--    * th        : Corner thickness (not visible when ext_corner=false)
 //--    * ext_corner: If the exterior corner is used as a reference
 //--------------------------------------------------------------------------  
 module bconcave_corner_attach(
@@ -318,6 +340,7 @@ module bconcave_corner_attach(
            cr=3,
            cres=3,
            l=5, 
+           th=1,
            ext_corner=false)
 {
 
@@ -336,6 +359,7 @@ module bconcave_corner_attach(
          cr=cr,
          cres=cres,
          l=l,
+         th=th,
          ext_corner=ext_corner);
 
 }
@@ -447,7 +471,7 @@ difference() {
     cube([size[0], size[1]+1,size[2]],center=true);
 }
 
-bconcave_corner_attach(ec1,en1,cr=10, cres=0, l=l, ext_corner=false);
+bconcave_corner_attach(ec1,en1,cr=10, cres=0, th=th, l=l, ext_corner=true);
 bconcave_corner_attach(ec2,en2,cr=10, cres=0, l=l, ext_corner=false);
 /*
 bconcave_corner_attach(ec3,en3,cr=10, cres=0, l=size[1], ext_corner=false);
