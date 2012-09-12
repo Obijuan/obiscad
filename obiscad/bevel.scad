@@ -9,6 +9,7 @@
 //-- Released under the GPL license
 //---------------------------------------------------------------
 use <vector.scad>
+use <attach.scad>
 
 //-----------------------------------------------------------------
 //- Rotate a vector an angle teta around the axis given by the
