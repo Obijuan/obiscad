@@ -7,6 +7,8 @@
 //-- Released under the GPL license
 //---------------------------------------------------------------
 
+obiscad_drawing_resolution = 6;
+
 //----------------------------------------
 //-- FUNCTIONS FOR WORKING WITH VECTORS
 //----------------------------------------
@@ -35,7 +37,7 @@ function anglev(u,v) = acos( dot(u,v) / (mod(u)*mod(v)) );
 module point(p)
 {
   translate(p)
-    sphere(r=0.7,$fn=20);
+    sphere(r=0.7,$fn=obiscad_drawing_resolution);
 }
 
 //------------------------------------------------------------------
@@ -59,7 +61,7 @@ module vectorz(l=10, l_arrow=4, mark=false)
 
     //-- Draw the arrow
     translate([0,0,lb/2])
-      cylinder(r1=2/2, r2=0.2, h=l_arrow, $fn=20);
+      cylinder(r1=2/2, r2=0.2, h=l_arrow, $fn=obiscad_drawing_resolution);
 
     //-- Draw the mark
     if (mark) {
@@ -69,11 +71,11 @@ module vectorz(l=10, l_arrow=4, mark=false)
     }
 
     //-- Draw the body
-    cylinder(r=1/2, h=lb, center=true, $fn=20);
+    cylinder(r=1/2, h=lb, center=true, $fn=obiscad_drawing_resolution);
   }
 
   //-- Draw a sphere in the vector base
-  sphere(r=1/2, $fn=20);
+  sphere(r=1/2, $fn=obiscad_drawing_resolution);
 }
 
 //-----------------------------------------------------------------
@@ -177,7 +179,7 @@ module frame(l=10, l_arrow=4)
 
   //-- Origin
   color("Gray")
-    sphere(r=1, $fn=20);
+    sphere(r=1, $fn=obiscad_drawing_resolution);
 }
 
 //--------------------------------------------------
