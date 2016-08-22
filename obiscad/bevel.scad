@@ -21,16 +21,16 @@ function Rot_axis_ang(p,k,teta) =
 //-- Transformation defined by rotating vfrom vector to vto
 //-- It is applied to vector v
 //-- It returns the transformed vector
-function Tovector(vfrom, vto, v) = 
+function Tovector(vfrom, vto, v) =
    Rot_axis_ang(v, unitv(cross(vfrom,vto)), anglev(vfrom,vto));
 
 //-- Auxiliary function for extending a vector of 3 components to 4
 function ev(v,c=0) = [v[0], v[1], v[2], c];
 
 //-- Calculate the determinant of a matrix given by 3 row vectors
-function det(a,b,c) = 
+function det(a,b,c) =
    a[0]*(b[1]*c[2]-b[2]*c[1])
- - a[1]*(b[0]*c[2]-b[2]*c[0])  
+ - a[1]*(b[0]*c[2]-b[2]*c[0])
  + a[2]*(b[0]*c[1]-b[1]*c[0]);
 
 
@@ -50,7 +50,7 @@ function sign2(x) = sign(x)+1 - abs(sign(x));
 //--------------------------------------------------------------------
 module bconcave_corner_aux(cr,cres,l,th)
 {
-  
+
   //-- vector for translating the  main cube
   //-- so that the top rigth corner is on the origin
   v1 = -[(cr+th)/2, (cr+th)/2, 0];
@@ -68,7 +68,7 @@ module bconcave_corner_aux(cr,cres,l,th)
     translate(v1)
         //color("yellow",0.5)
         cube([cr+th, cr+th, l],center=true);
- 
+
     //-- Cylinder used for beveling...
     cylinder(r=cr, h=l+1, center=true, $fn=4*(cres+1));
   }
@@ -86,14 +86,14 @@ module bconcave_corner_aux(cr,cres,l,th)
 //--   * l: Length
 //-    * th: Thickness
 //--   * ext_corner: Where the origin is locate. By default it is located
-//--       in the internal corner (concave zone). If true, 
+//--       in the internal corner (concave zone). If true,
 //--       it will be in the external corner (convex zone)
 //----------------------------------------------------------------------------
 module bconcave_corner(cr=1,cres=4,th=1,l=10,ext_corner=false)
 {
   //-- Locate the origin in the exterior edge
   if (ext_corner==true)
-    translate([th,th,0]) 
+    translate([th,th,0])
       bconcave_corner_aux(cr,cres,l,th);
   else
      //-- Locate the origin in the interior edge
@@ -115,14 +115,14 @@ module bconcave_corner_attach_final(
         th,
         ext_corner)
 {
- 
+
   //-- This block represent an attach operation
   //-- It is equivalent to:  attach(cto,cfrom)
   translate(cto[0])
     rotate(a=cto[2], v=cto[1])
-      rotate(a=anglev(cfrom[1],cto[1]), 
+      rotate(a=anglev(cfrom[1],cto[1]),
              v=cross(cfrom[1],cto[1]) )
-        translate(-cfrom[0]) 
+        translate(-cfrom[0])
 
   //-- Place the concave corner (along with some debug information)
   union() {
@@ -130,7 +130,7 @@ module bconcave_corner_attach_final(
     //connector(cfrom);
     //connector([cfrom[0],cnormal_v,0]);
     bconcave_corner(cr=cr,
-             cres=cres, 
+             cres=cres,
              l=l,
              th=th,
              ext_corner=ext_corner);
@@ -153,7 +153,7 @@ module bconcave_corner_attach_final(
 module bconcave_corner_attach_aux(
 
          //-- External connectors
-         edge_c, 
+         edge_c,
          normal_c,
 
          //-- Internal connectors
@@ -178,7 +178,7 @@ module bconcave_corner_attach_aux(
   enormal_v = normal_c[1]; //-- Edge normal vector
 
   //---------------------------------------------------------------
-  //-- For doing a correct attach, first the roll angle for the  
+  //-- For doing a correct attach, first the roll angle for the
   //-- external connector should be calculated. It determines the
   //-- orientation of the concave corner around the edge vector
   //--
@@ -235,20 +235,20 @@ module bconcave_corner_attach_aux(
 //---------------------------------------------------------------------------
 //-- API MODULE
 //--
-//--  Bevel an edge. A concave corner is located so that the calling 
+//--  Bevel an edge. A concave corner is located so that the calling
 //--  module can easily perform a difference() operation
 //--
 //--  Two connectors are needed:
 //--    * edge_c   : Connector located on the edge, paralell to the edge
-//--    * normal_c : Connector located on the same point than edge_c 
+//--    * normal_c : Connector located on the same point than edge_c
 //--                 pointing to the internal corner part, in the direction
 //--                 of the corner bisector
 //--    * cr        : Corner radius
 //--    * cres      : Corner resolution
 //--    * l         : Corner length
-//--------------------------------------------------------------------------  
+//--------------------------------------------------------------------------
 module bevel(
-           edge_c, 
+           edge_c,
            normal_c,
            cr=3,
            cres=3,
@@ -262,7 +262,7 @@ module bevel(
          edge_c   = edge_c,
          normal_c = normal_c,
 
-	 //-- Internal connectors 
+	 //-- Internal connectors
          iedge_c   = [[0,0,0], unitv([0,0,1]), 0],
          inormal_c = [[0,0,0], [-1,-1,0]       , 0],
 
@@ -281,7 +281,7 @@ module bevel(
 //--  Attach a Beveled concave corner
 //--  Two connectors are needed:
 //--    * edge_c   : Connector located on the edge, paralell to the edge
-//--    * normal_c : Connector located on the same point than edge_c 
+//--    * normal_c : Connector located on the same point than edge_c
 //--                 pointing to the internal corner part, in the direction
 //--                 of the corner bisector
 //--    * cr        : Corner radius
@@ -289,13 +289,13 @@ module bevel(
 //--    * l         : Corner length
 //--    * th        : Corner thickness (not visible when ext_corner=false)
 //--    * ext_corner: If the exterior corner is used as a reference
-//--------------------------------------------------------------------------  
+//--------------------------------------------------------------------------
 module bconcave_corner_attach(
-           edge_c, 
+           edge_c,
            normal_c,
            cr=3,
            cres=3,
-           l=5, 
+           l=5,
            th=1,
            ext_corner=false)
 {
@@ -307,7 +307,7 @@ module bconcave_corner_attach(
          edge_c   = edge_c,
          normal_c = normal_c,
 
-	 //-- Internal connectors 
+	 //-- Internal connectors
          iedge_c   = [[0,0,0], unitv([0,0,1]), 0],
          inormal_c = [[0,0,0], [1,1,0]       , 0],
 
@@ -319,7 +319,7 @@ module bconcave_corner_attach(
          ext_corner=ext_corner);
 
 }
-  
+
 //-----------------------------------------------------------
 //---   TEST MODULES
 //-----------------------------------------------------------
@@ -386,7 +386,7 @@ module Test1_beveled_cube()
   difference() {
 
     //-- Draw the main cube
-    cube(size,center=true); 
+    cube(size,center=true);
 
     //-- Attach the concave corners for beveling!
     bevel(ec1,en1,cr=cr,cres=0, l=size[1]+2);
@@ -417,10 +417,10 @@ module Test2_buttress()
   th=3;
   l=2;
   cr = 6;
- 
+
 
   //-- A cross. It divides the space in 4 quadrants
-  difference() {  
+  difference() {
     cube(size,center=true);
     translate([size[0]/4 + th/2, 0, size[0]/4 + th/2])
       cube([size[0]/2, size[1]+2, size[2]/2],center=true);
@@ -445,18 +445,18 @@ module Test2_buttress()
   en3 = [ec3[0],[-1,0,1],0];
 
   ec4 = [[-th/2, 0, -th/2], [0,1,0], 0];
-  en4 = [ec4[0],[-1,0,-1],0]; 
+  en4 = [ec4[0],[-1,0,-1],0];
 
   ec5 = [[th/2, 0, -th/2], [0,1,0], 0];
-  en5 = [ec5[0],[1,0,-1],0]; 
+  en5 = [ec5[0],[1,0,-1],0];
 
   *connector(ec5);
   *connector(en5);
- 
+
   //-- quadrant 1:  two buttress
   bconcave_corner_attach(ec1,en1,cr, l=l, cres=0);
   bconcave_corner_attach(ec2,en2,cr, l=l, cres=0);
-  
+
   //-- quadrant 2:  one bit buttress
   bconcave_corner_attach(ec3,en3,cr=3, l=size[1], cres=0);
 
@@ -466,6 +466,62 @@ module Test2_buttress()
   //-- Quadrant 4: A rounded buttress in the middle
   bconcave_corner_attach(ec5,en5,cr=8, l=size[1]/3, cres=5);
 
+}
+
+//-----------------------------------------------------------------------------
+//A modul to create a cube with bevels (you can choose which edges are beveled)
+//ARGUMENTS:
+//size[x,y,z] the size of the cube
+//bevels[...] list of the corners you wanna bevel numbering is:
+//    -you look to onto the xz-plane from -y to the not centered cube
+//    -the top edge is 0
+//    -counting goes anti-clockwise (seen from the top)
+//    -after a finished round counting goes on at the bevel which is the closed
+//    to the z-axis
+//*/
+//-----------------------------------------------------------------------------
+module bevelCube(size, bevels, cr_cube ,cres_cube, center = false)
+{
+  //edge = [ [position, direction], normal, length ]; position, direction and
+    //normal are 3d vectors/arrays
+  edge0 = [ [[size[0]/2, 0, size[2]], [1,0,0]], [0,-1,1], size[0] + 1 ];
+  edge1 = [ [[size[0], size[1]/2, size[2]], [0,1,0]], [1,0,1], size[1] + 1  ];
+  edge2 = [ [[size[0]/2, size[1], size[2]], [1,0,0]], [0,1,1], size[0] + 1  ];
+  edge3 = [ [[0, size[1]/2, size[2]], [0,1,0]], [-1,0,1], size[1]  + 1  ];
+
+  edge4 = [ [[0, 0, size[2]/2], [0,0,1]], [-1,-1,0], size[2] + 1  ];
+  edge5 = [ [[size[0], 0, size[2]/2], [0,0,1]], [1,-1,0], size[2] + 1  ];
+  edge6 = [ [[size[0], size[1], size[2]/2], [0,0,1]], [1,1,0], size[2] + 1  ];
+  edge7 = [ [[0, size[1], size[2]/2], [0,0,1]], [-1,1,0], size[2] + 1  ];
+
+  edge8 = [ [[size[0]/2, 0,0], [1,0,0]], [0,-1,-1], size[0] + 1  ];
+  edge9 = [ [[size[0], size[1]/2, 0], [0,1,0]], [1,0,-1], size[1]  + 1  ];
+  edge10 = [ [[size[0]/2, size[1], 0], [1,0,0]], [0,1,-1], size[0] + 1  ];
+  edge11 = [ [[0, size[1]/2, 0], [0,1,0]], [-1,0,-1], size[1]  + 1  ];
+
+  edges = [edge0, edge1, edge2, edge3, edge4, edge5, edge6, edge7, edge8,
+    edge9, edge10, edge11];
+  if(center)
+    translate([-size[0]/2, -size[1]/2, -size[2]/2])
+    difference()
+    {
+      cube(size);
+        for(i = bevels)
+        {
+          bevel(edges[i][0], [ edges[i][0][0], edges[i][1] ], cr = cr_cube,
+            cres = cres_cube,  l=edges[i][2]);
+        }
+    }
+  else
+    difference()
+    {
+      cube(size);
+        for(i = bevels)
+        {
+          bevel(edges[i][0], [ edges[i][0][0], edges[i][1] ], cr = cr_cube,
+            cres = cres_cube,  l=edges[i][2]);
+        }
+    }
 }
 
 //-------------------------------------------------------------------
@@ -480,6 +536,3 @@ bconcave_corner(cr=15, cres=10, l=10, th=3, ext_corner=true);
 
 //-- Example 3: Testing the bconcave_corner_attach() operator
 //Test2_buttress();
-
-
-
