@@ -80,7 +80,7 @@ module attach(a,b)
     rotate(a=roll, v=v)  rotate(a=ang, v=raxis)
       //-- Attachable part to the origin
       translate(-pos2)
-	child(0); 
+	children([0:$children-1]);
 }
 
 
