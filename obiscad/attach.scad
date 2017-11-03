@@ -20,7 +20,7 @@ use <vector.scad>
 //--
 //--- Input parameters:
 //--
-//--  Connector c = [p , n, ang] where:
+//--  Connector c = [p , v, ang] where:
 //--
 //--     p : The attachment point
 //--     v : The attachment axis
