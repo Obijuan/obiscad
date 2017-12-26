@@ -199,7 +199,8 @@ module bconcave_corner_attach_aux(
 
   //-- Calculate the roll in the general case
   Tcnormal_v = Tovector(cedge_v, edge_v, cnormal_v);
-  rollg=s*anglev(Tcnormal_v, enormal_v);
+  //-- Tcnormal_v has to be used to calculate sign in the general case
+  rollg=sign2(det(Tcnormal_v,enormal_v,edge_v))*anglev(Tcnormal_v, enormal_v);
 
   //-- For the paralell case... use rollp
   if (mod(cross(cedge_v,edge_v))==0) {
