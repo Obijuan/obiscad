@@ -65,12 +65,12 @@ module attach(a,b)
 
   //-------- Calculations for the "orientate operator"------
   //-- Calculate the rotation axis
-  raxis = cross(vref,v);
+  cref = cross(vref,v);
+  raxis = norm(cref) == 0 ? ortho2(vref) : cref;
     
   //-- Calculate the angle between the vectors
   ang = anglev(vref,v);
   //--------------------------------------------------------.-
-
   //-- Apply the transformations to the child ---------------------------
 
   //-- Place the attachable part on the main part attachment point
@@ -108,6 +108,7 @@ size = [10,10,10];
 //--     Att. point       Att. Axis  Roll
 c1 = [ [0,0,size[2]/2],  [0,0,1],     20];  //-- Connector on the top
 c2 = [ [-size[0]/2,0,0], [-1,0,0],    90];  //-- Connector on the left
+c3 = [ [0,0,-size[0]/2], [0,0,-1],    90];  //-- Connector on the bottom, degenerate case !
 
 
 //-- Draw the main part along with the connectors (for debugging)
@@ -117,6 +118,7 @@ cube(size,center=true);
 if (debug) {
   connector(c1);
   connector(c2);
+  connector(c3);
 }
 
 //-- Define the Attachable part. It is another cube, with one connector
