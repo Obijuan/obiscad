@@ -31,6 +31,12 @@ function unitv(v) = v/mod(v);
 //-- Return the angle between two vectores
 function anglev(u,v) = acos( dot(u,v) / (mod(u)*mod(v)) );
 
+//-- Return an arbitrary unitary vector othogonal to v
+function orthounit2(v) = (v.x == 0 && v.y == 0 && v.z ==0 ) ? undef : (v.x == 0 && v.y == 0) ? [1,0,0] : let (r=norm([v.x, v.y, 0])) [v.y/r, -v.x/r, 0];
+
+//-- Return an arbitrary vector othogonal to v
+function ortho2(v) = (v.x == 0 && v.y == 0 && v.z== 0) ? undef : (v.x == 0 && v.y == 0) ? [1,0,0] : (v.y == 0) ? [1,0,0] : [1, -v.x/v.y, 0];
+
 //----------------------------------------------------------
 //--  Draw a point in the position given by the vector p  
 //----------------------------------------------------------
@@ -92,7 +98,8 @@ module vectorz(l=10, l_arrow=4, mark=false)
 module orientate(v,vref=[0,0,1], roll=0)
 {
   //-- Calculate the rotation axis
-  raxis = cross(vref,v);
+  cref = cross(vref, v);
+  raxis = mod(cref) == 0 ? [1,0,0] : cref;
   
   //-- Calculate the angle between the vectors
   ang = anglev(vref,v);
@@ -140,7 +147,8 @@ module vector(v,l=0, l_arrow=4, mark=false)
   //-- Calculate the rotation axis
 
   vref = [0,0,1];
-  raxis = cross(vref,v);
+  cref = cross(vref, v);
+  raxis = mod(cref) == 0 ? [1,0,0] : cref;
   
   //-- Calculate the angle between the vectors
   ang = anglev(vref,v);
@@ -245,7 +253,7 @@ module Test_vectors2()
     [0,  -1, 1],
     [1,  -1, 1],
     [1,   0, 1],
-  
+    [0,   0, -1], // degenerate case 
     [1,   1, -1],
     [0,   1, -1],
     [-1,  1, -1],
@@ -325,6 +333,25 @@ module Test_vector4()
 
   vector([10,-2,5]);
 
+}
+
+//-- Test the degenerate case ie. the vectors are (anti)collinear
+module Test_vector5()
+{
+  o = [0,0,10];
+  v = [0,0,-10];
+
+  color("Red") vector(o);
+  color("Blue") vector(v);
+
+  //-- Orientate the vector o in the direction of v
+  orientate(v,o)
+    vector(o);
+
+  //-- Inverse operation: orientate the v vector in the direction
+  //-- of o
+  orientate(o,v)
+    vector(v);
 }
 
 //-------- Perform tests......
