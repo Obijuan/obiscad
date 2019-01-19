@@ -47,31 +47,37 @@ function sign2(x) = sign(x)+1 - abs(sign(x));
 //--   * cres: Corner resolution
 //--   * l: Length
 //-    * th: Thickness
+//--   * alpha     : Concave Angle between faces
 //--------------------------------------------------------------------
-module bconcave_corner_aux(cr,cres,l,th)
+module bconcave_corner_aux(cr,cres,l,th,alpha=90)
 {
 
-  //-- vector for translating the  main cube
-  //-- so that the top rigth corner is on the origin
-  v1 = -[(cr+th)/2, (cr+th)/2, 0];
-
-  //-- The part frame of reference is on the
-  //-- internal corner
-  v2 = [cr,cr,0];
-
-  //-- Locate the frame of ref. in the internal
-  //-- corner
-  translate(v2)
-  difference() {
-
-    //-- Main cube for doing the corner
-    translate(v1)
-        //color("yellow",0.5)
-        cube([cr+th, cr+th, l],center=true);
-
-    //-- Cylinder used for beveling...
+    a = cr * cos(90-(alpha/2));
+    b = cr * sin(90-(alpha/2));
+    d = b / sin(alpha/2);
+    c = d * cos(alpha/2);
+    e = d * cos(45+(alpha/2));
+    f = d * sin(45+(alpha/2));
+    
+    difference() {
+    translate([0,0,-l/2])
+    linear_extrude(
+        height = l,    
+        center = false,
+        convexity = 20,
+        twist = 0)
+    polygon(points=[
+        [0-th,0-th],
+        [e-th,f],
+        [e,f],
+        [f,e],
+        [f,e-th]
+    ], convexity=20);
+    
+    translate([(a+c)*cos(45),(a+c)*sin(45),0])
+    color([1,0,0])
     cylinder(r=cr, h=l+1, center=true, $fn=4*(cres+1));
-  }
+    }   
 }
 
 
@@ -88,17 +94,18 @@ module bconcave_corner_aux(cr,cres,l,th)
 //--   * ext_corner: Where the origin is locate. By default it is located
 //--       in the internal corner (concave zone). If true,
 //--       it will be in the external corner (convex zone)
+//--   * alpha     : Concave Angle between faces
 //----------------------------------------------------------------------------
-module bconcave_corner(cr=1,cres=4,th=1,l=10,ext_corner=false)
+module bconcave_corner(cr=1,cres=4,th=1,l=10,ext_corner=false,alpha=90)
 {
   //-- Locate the origin in the exterior edge
   if (ext_corner==true)
-    translate([th,th,0])
-      bconcave_corner_aux(cr,cres,l,th);
+    //translate([0,0,0])
+      bconcave_corner_aux(cr,cres,l,th,alpha=alpha);
   else
      //-- Locate the origin in the interior edge
-     translate([0.01, 0.01,0])
-       bconcave_corner_aux(cr,cres,l,th);
+     //translate([0.0, 0.0,0])
+       bconcave_corner_aux(cr,cres,l,th,alpha=alpha);
 }
 
 //----------------------------------------------------------------------
@@ -113,7 +120,8 @@ module bconcave_corner_attach_final(
         cres,
         l,
         th,
-        ext_corner)
+        ext_corner,
+	alpha=90)
 {
 
   //-- This block represent an attach operation
@@ -123,17 +131,19 @@ module bconcave_corner_attach_final(
       rotate(a=anglev(cfrom[1],cto[1]),
              v=cross(cfrom[1],cto[1]) )
         translate(-cfrom[0])
-
   //-- Place the concave corner (along with some debug information)
   union() {
     //color("Blue")
     //connector(cfrom);
     //connector([cfrom[0],cnormal_v,0]);
-    bconcave_corner(cr=cr,
-             cres=cres,
-             l=l,
-             th=th,
-             ext_corner=ext_corner);
+	  
+    bconcave_corner(
+	    cr=cr,
+	    cres=cres,
+	    th=th,
+	    l=l,
+	    ext_corner=ext_corner,
+	    alpha=alpha);
   }
 }
 
@@ -153,19 +163,20 @@ module bconcave_corner_attach_final(
 module bconcave_corner_attach_aux(
 
          //-- External connectors
-         edge_c,
-         normal_c,
-
-         //-- Internal connectors
-         iedge_c,
-         inormal_c,
-
-	 //-- Other params
-         cr,
-         cres,
-         th,
-         l,
-         ext_corner)
+	edge_c,
+	normal_c,
+	
+	//-- Internal connectors
+	iedge_c,
+	inormal_c,
+	
+	//-- Other params
+	cr,
+	cres,
+	th,
+	l,
+	ext_corner,
+	alpha=90)
 
 {
   //-- Get the Corner vectors from the internal connectors
@@ -208,28 +219,30 @@ module bconcave_corner_attach_aux(
 
      //-- Place the concave bevel corner!
      bconcave_corner_attach_final(
-       cfrom = [[0,0,0],   cedge_v,   0],
-       cto   = [edge_c[0], edge_c[1], rollp],
-       cr    = cr,
-       cres  = cres,
-       l     = l,
-       th    = th,
-       ext_corner = ext_corner);
+	     cfrom = [[0,0,0],   cedge_v,   0],
+	     cto   = [edge_c[0], edge_c[1], rollp],
+	     cr    = cr,
+	     cres  = cres,
+	     l     = l,
+	     th    = th,
+	     ext_corner = ext_corner,
+	     alpha=alpha);
   }
 
   //-- For the general case, use rollg
   else {
-    //echo("not paralell");
-
-     //-- Place the concave bevel corner!
-     bconcave_corner_attach_final(
-       cfrom = [[0,0,0],   cedge_v,   0],
-       cto   = [edge_c[0], edge_c[1], rollg],
-       cr    = cr,
-       cres  = cres,
-       l     = l,
-       th    = th,
-       ext_corner = ext_corner);
+	  //echo("not paralell");
+	  
+	  //-- Place the concave bevel corner!
+	  bconcave_corner_attach_final(
+		  cfrom = [[0,0,0],   cedge_v,   0],
+		  cto   = [edge_c[0], edge_c[1], rollg],
+		  cr    = cr,
+		  cres  = cres,
+		  l     = l,
+		  th    = th,
+		  ext_corner = ext_corner,
+		  alpha=alpha);
   }
 }
 
@@ -247,32 +260,35 @@ module bconcave_corner_attach_aux(
 //--    * cr        : Corner radius
 //--    * cres      : Corner resolution
 //--    * l         : Corner length
+//--    * alpha     : Concave Angle between faces
 //--------------------------------------------------------------------------
 module bevel(
            edge_c,
            normal_c,
            cr=3,
            cres=3,
-           l=5)
+           l=5,
+           alpha=90)
 {
 
   //-- Call the general module with the correct internal connectors
   bconcave_corner_attach_aux(
 
          //-- External connectors
-         edge_c   = edge_c,
-         normal_c = normal_c,
-
-	 //-- Internal connectors
-         iedge_c   = [[0,0,0], unitv([0,0,1]), 0],
-         inormal_c = [[0,0,0], [-1,-1,0]       , 0],
-
-         //-- The other params
-         cr=cr,
-         cres=cres,
-         l=l,
-         th=1,
-         ext_corner=false);
+	  edge_c   = edge_c,
+	  normal_c = normal_c,
+	  
+	  //-- Internal connectors
+	  iedge_c   = [[0,0,0], unitv([0,0,1]), 0],
+	  inormal_c = [[0,0,0], [-1,-1,0]       , 0],
+	  
+	  //-- The other params
+	  cr=cr,
+	  cres=cres,
+	  l=l,
+	  th=1,
+	  ext_corner=false,
+	  alpha=alpha);
 }
 
 
@@ -530,7 +546,7 @@ module bevelCube(size, bevels, cr_cube ,cres_cube, center = false)
 //-------------------------------------------------------------------
 
 //-- example 1: A beveled concave corner
-bconcave_corner(cr=15, cres=10, l=10, th=3, ext_corner=true);
+//bconcave_corner(cr=15, cres=10, l=10, th=3, ext_corner=true);
 
 //-- Example 2: Testing the bevel() operator
 //Test1_beveled_cube();
